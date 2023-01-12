@@ -25,7 +25,7 @@ function draw() {
   var newR = random(1, 7);
   var newX = random(newR, width - newR);
   var newY = random(newR, height - newR);
-
+  s;
   var closestDist = Number.MAX_VALUE;
   var closestIndex = 0;
 
