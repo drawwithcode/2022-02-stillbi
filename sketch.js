@@ -1,64 +1,107 @@
-//DEFINE THE ARRAY OF COLORS
-const colorList = ["#13E23A", "#F70825", "#F9F9F9"];
-//define the variables
-var iterator = 0;
-let myImage;
-let myImage2;
-let mySong;
+var maxCount = 5000; // max count of the cirlces
+var currentCount = 1;
+var x = [];
+var y = [];
+var r = [];
+let myPersonalBalls = [];
 
-//I create the function preload before the function setup to set the assets
-//and set where to find my song and images
-function preload() {
-  myImage = loadImage("./assets/salvini.jpeg");
-  myImage2 = loadImage("./assets/salvinicerchio.png");
-  soundFormats("mp3", "ogg");
-  mySong = loadSound("./assets/FREESTYLE.mp3");
-}
-
-//I create my canva who occupies the whole screen
 function setup() {
   createCanvas(windowWidth, windowHeight);
+  strokeWeight(0.5);
+
+  // first circle
+  x[0] = width / 2;
+  y[0] = height / 2;
+  r[0] = 10;
+  for (let i = 0; i < 1; i++) {
+    addBall();
+  }
 }
 
-//in the function draw I make things appear in my canva
-//I set the background and I fill it with the photo of salvini and a black and white filter
 function draw() {
-  background(myImage);
-  myImage.filter("gray", 5);
+  clear();
 
-  //this is a cicle: draw squares on background with random colors taken from my array colorList
-  for (let x = 0; x < windowWidth; x += 20) {
-    for (let y = 0; y < windowHeight; y += 50) {
-      let colorHex = random(colorList);
-      fill(color(colorHex));
+  // create a random set of parameters
+  var newR = random(1, 7);
+  var newX = random(newR, width - newR);
+  var newY = random(newR, height - newR);
 
-      rect(x, y, 10, 10);
+  var closestDist = Number.MAX_VALUE;
+  var closestIndex = 0;
+
+  for (var i = 0; i < currentCount; i++) {
+    var newDist = dist(newX, newY, x[i], y[i]);
+    if (newDist < closestDist) {
+      closestDist = newDist;
+      closestIndex = i;
+    }
+
+    for (let i = 0; i < myPersonalBalls.length; i++) {
+      //the variable permits to add a ball
+      myPersonalBalls[i].run();
     }
   }
-  // perlin noise applied to my salvini picture both on x and y
-  iterator++;
-  let x = iterator;
-  let y = (noise(iterator / 60) * width) / 2;
-  image(myImage2, x, y, 200, 200);
 
-  //I write my text
-  let s = "CHIUDERE I PORTI! RUSPE RUSPE RUSPE! AH NO??";
-  fill("white");
-  textSize(32);
-  textAlign(CENTER);
-  text(s, 10, 10, windowWidth, windowHeight); // Text wraps within text box
+  // aline it to the closest circle outline
+  var angle = atan2(newY - y[closestIndex], newX - x[closestIndex]);
+
+  x[currentCount] = x[closestIndex] + cos(angle) * (r[closestIndex] + newR);
+  y[currentCount] = y[closestIndex] + sin(angle) * (r[closestIndex] + newR);
+  r[currentCount] = newR;
+  currentCount++;
+
+  // draw them
+  for (var i = 0; i < currentCount; i++) {
+    fill(50);
+    ellipse(x[i], y[i], r[i] * 2, r[i] * 2);
+  }
+
+  if (currentCount >= maxCount) noLoop();
 }
 
-//function which allows to play music when my mouse is clicked on the right part
-//when you click on the left part it stops
-function mousePressed() {
-  if (mouseButton == LEFT) {
-    if (mySong.isPlaying() == false) {
-      mySong.play();
-    }
-  } else if (mouseButton == RIGHT) {
-    if (mySong.isPlaying() == true) {
-      mySong.stop();
-    }
+function mouseClicked() {
+  //I define that when the mouse clicks, the function of adding a ball is triggered
+  addBall();
+}
+
+function addBall() {
+  //I define the function of adding a ball and define its parameters
+  const r = "black";
+  const BallColor = color(r);
+  const aNewBall = new Ball( //every time I go to create a ball I define that.
+    random(windowWidth), //is going to be placed at a random x within the canvas
+    random(windowHeight), //and in a random y within the canvas
+    random(3, 40),
+    BallColor
+  );
+  myPersonalBalls.push(aNewBall); //I then add a new ball to the group of balls defined by the class Ball
+}
+
+class Ball {
+  constructor(temp_x, temp_y, temp_r, temp_color) {
+    this.x = temp_x;
+    this.y = temp_y;
+    this.r = temp_r;
+    this.color = temp_color;
+  }
+
+  display() {
+    push();
+    noStroke();
+    fill(this.color);
+    ellipse(this.x, this.y, this.r);
+    pop();
+  }
+
+  updatePosition() {
+    //the position varies randomly on both the x-axis and y-axis by oscillating between two parameters
+    this.x += random(-1, 1);
+    this.y += random(-1, 1);
+  }
+
+  run() {
+    //each time you go to create the ball you update the position you update the aesthetics of the ball
+    this.updatePosition();
+    this.display();
   }
 }
